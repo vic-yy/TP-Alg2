@@ -68,12 +68,27 @@ def atualizar_resultado(geojson, n_clicks):
 
     trigger = ctx.triggered[0]["prop_id"]
 
-    if "btn_reset" in trigger or not geojson or not geojson.get("features"):
+    # Verificação extra para evitar erro de 'geometry'
+    if (
+        "btn_reset" in trigger or
+        not geojson or
+        not geojson.get("features") or
+        not geojson["features"]
+    ):
+        return html.Div("Selecione uma área no mapa."), []
+
+    # Procura a primeira feature válida com geometry e coordinates
+    feature = next(
+        (f for f in geojson["features"]
+         if f.get("geometry") and f["geometry"].get("coordinates")),
+        None
+    )
+    if not feature:
         return html.Div("Selecione uma área no mapa."), []
 
     try:
         # Extrair coordenadas do retângulo desenhado
-        coords = geojson["features"][0]["geometry"]["coordinates"][0]
+        coords = feature["geometry"]["coordinates"][0]
         lons = [p[0] for p in coords]
         lats = [p[1] for p in coords]
         lat_min, lat_max = min(lats), max(lats)
