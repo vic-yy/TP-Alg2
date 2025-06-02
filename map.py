@@ -125,6 +125,7 @@ app.layout = html.Div([
 
     # Right: Table + Filter Buttons
     html.Div([
+        
         # Buttons and Filters
         html.Div([
             # Row 1: Reset Button
@@ -146,23 +147,23 @@ app.layout = html.Div([
 
             # Row 2: Nome Filter
             html.Div([
-                html.Label('Nome:', style={'marginBottom': '5px'}),
+                html.Label('Nome:', style={'marginBottom': '0px', 'padding': '5px', 'width': '90px', 'font-weight': 'bold'}),
                 dcc.Input(id='name-filter', type='text', placeholder='Buscar por nome...', debounce=True, style={
                     'width': '100%', 'height': '32px'
                 })
-            ], style={'marginBottom': '10px', 'display': 'flex', 'flexDirection': 'column'}),
+            ], style={'marginBottom': '5px', 'display': 'flex', 'flexDirection': 'row'}),
 
             # Row 3: Endereço Filter
             html.Div([
-                html.Label('Endereço:', style={'marginBottom': '5px'}),
+                html.Label('Endereço:', style={'marginBottom': '0px', 'padding': '5px', 'width': '90px', 'font-weight': 'bold'}),
                 dcc.Input(id='address-filter', type='text', placeholder='Buscar por endereço...', debounce=True, style={
                     'width': '100%', 'height': '32px'
                 })
-            ], style={'marginBottom': '10px', 'display': 'flex', 'flexDirection': 'column'}),
+            ], style={'marginBottom': '5px', 'display': 'flex', 'flexDirection': 'row'}),
 
             # Row 4: Alvará Checkboxes
             html.Div([
-                html.Label('Alvará:', style={'marginBottom': '5px'}),
+                html.Label('Alvará:', style={'marginBottom': '0px', 'padding': '5px', 'width': '90px', 'font-weight': 'bold'}),
                 dcc.Checklist(
                     id='alvara-filter',
                     options=[
@@ -170,16 +171,16 @@ app.layout = html.Div([
                         {'label': 'Não', 'value': 'NÃO'}
                     ],
                     value=['SIM', 'NÃO'],
-                    labelStyle={'display': 'inline-block', 'marginRight': '15px'},
+                    labelStyle={'display': 'inline-block', 'marginRight': '10px'},
                     style={
                         'display': 'flex',
                         'flexDirection': 'row',
                         'alignItems': 'center',
                         'padding': '0',
-                        'margin': '0'
+                        'marginLeft': '-5px'
                     }
                 )
-            ], style={'marginBottom': '10px', 'display': 'flex', 'flexDirection': 'column'})
+            ], style={'marginBottom': '5px', 'display': 'flex', 'flexDirection': 'row'})
         ]),
 
         # Scrollable Table Container
