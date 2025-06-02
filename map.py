@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import dash
-from dash import html, dash_table
+from dash import html, dash_table, dcc
 import dash_leaflet as dl
 from dash.dependencies import Input, Output, State
 import re
@@ -39,7 +39,12 @@ df['FULL_ADDRESS'] = df.apply(
                 f"{', ' + row['COMPLEMENTO'] if pd.notna(row['COMPLEMENTO']) else ''}, {row['NOME_BAIRRO']}",
     axis=1
 )
-df = df[['NOME_FANTASIA', 'latitude', 'longitude', 'FULL_ADDRESS', 'DATA_INICIO_ATIVIDADE', 'IND_POSSUI_ALVARA']]
+
+# Convert date to datetime format
+df['DATA_INICIO_ATIVIDADE'] = pd.to_datetime(df['DATA_INICIO_ATIVIDADE'], format='%d-%m-%Y', errors='coerce')
+df['DATA_INICIO_STR'] = df['DATA_INICIO_ATIVIDADE'].dt.strftime('%Y-%m-%d')
+
+df = df[['NOME_FANTASIA', 'latitude', 'longitude', 'FULL_ADDRESS', 'DATA_INICIO_ATIVIDADE', 'IND_POSSUI_ALVARA', 'DATA_INICIO_STR']]
 
 # k-d Tree implementation
 class KDTreeNode:
@@ -118,19 +123,64 @@ app.layout = html.Div([
         'height': '100%'
     }),
 
-    # Right: Table + Button
+    # Right: Table + Filter Buttons
     html.Div([
-        html.Button('Reset Filter', id='reset-btn', style={
-            'marginBottom': '10px',
-            'width': '100%',
-            'padding': '0px',
-            'backgroundColor': '#0074D9',
-            'color': 'white',
-            'border': 'none',
-            'borderRadius': '0px',
-            'cursor': 'pointer',
-            'textAlign': 'center'
-        }),
+        # Buttons and Filters
+        html.Div([
+            # Row 1: Reset Button
+            html.Div([
+                html.Button('Reset Filter', id='reset-btn', style={
+                    'backgroundColor': '#0074D9',
+                    'color': 'white',
+                    'border': 'none',
+                    'padding': '6px 12px',
+                    'borderRadius': '4px',
+                    'cursor': 'pointer',
+                    'width': 'fit-content',
+                    'display': 'flex',
+                    'justifyContent': 'center',
+                    'alignItems': 'center',
+                    'height': '36px'
+                })
+            ], style={'marginBottom': '10px'}),
+
+            # Row 2: Nome Filter
+            html.Div([
+                html.Label('Nome:', style={'marginBottom': '5px'}),
+                dcc.Input(id='name-filter', type='text', placeholder='Buscar por nome...', debounce=True, style={
+                    'width': '100%', 'height': '32px'
+                })
+            ], style={'marginBottom': '10px', 'display': 'flex', 'flexDirection': 'column'}),
+
+            # Row 3: Endereço Filter
+            html.Div([
+                html.Label('Endereço:', style={'marginBottom': '5px'}),
+                dcc.Input(id='address-filter', type='text', placeholder='Buscar por endereço...', debounce=True, style={
+                    'width': '100%', 'height': '32px'
+                })
+            ], style={'marginBottom': '10px', 'display': 'flex', 'flexDirection': 'column'}),
+
+            # Row 4: Alvará Checkboxes
+            html.Div([
+                html.Label('Alvará:', style={'marginBottom': '5px'}),
+                dcc.Checklist(
+                    id='alvara-filter',
+                    options=[
+                        {'label': 'Sim', 'value': 'SIM'},
+                        {'label': 'Não', 'value': 'NÃO'}
+                    ],
+                    value=['SIM', 'NÃO'],
+                    labelStyle={'display': 'inline-block', 'marginRight': '15px'},
+                    style={
+                        'display': 'flex',
+                        'flexDirection': 'row',
+                        'alignItems': 'center',
+                        'padding': '0',
+                        'margin': '0'
+                    }
+                )
+            ], style={'marginBottom': '10px', 'display': 'flex', 'flexDirection': 'column'})
+        ]),
 
         # Scrollable Table Container
         html.Div([
@@ -139,10 +189,11 @@ app.layout = html.Div([
                 columns=[
                     {'name': 'Nome', 'id': 'NOME_FANTASIA'},
                     {'name': 'Endereço', 'id': 'FULL_ADDRESS'},
-                    {'name': 'Data Início', 'id': 'DATA_INICIO_ATIVIDADE'},
-                    {'name': 'Possui Alvará', 'id': 'IND_POSSUI_ALVARA'}
+                    {'name': 'Início', 'id': 'DATA_INICIO_STR'},
+                    {'name': 'Alvará', 'id': 'IND_POSSUI_ALVARA'}
                 ],
-                page_size=15,
+                page_size=10,
+                sort_action='native',
                 style_table={
                     'height': '100%',
                     'overflowY': 'auto'
@@ -154,16 +205,20 @@ app.layout = html.Div([
                     'padding': '8px'
                 },
                 style_data_conditional=[
-                    {
-                        'if': {'row_index': 'odd'},
-                        'backgroundColor': '#f0f0f0'
-                    },
-                    {
-                        'if': {'state': 'selected'},
-                        'backgroundColor': '#d3e0ea',
-                        'border': '1px solid #0074D9'
-                    }
+                    {'if': {'column_id': 'DATA_INICIO_STR'},
+                    'width': '100px', 'minWidth': '100px', 'maxWidth': '100px',
+                    'textAlign': 'center'},
+                    {'if': {'column_id': 'IND_POSSUI_ALVARA'}, 'textAlign': 'center'},
+                    {'if': {'row_index': 'odd'},
+                    'backgroundColor': '#f0f0f0'},
+                    {'if': {'state': 'selected'},
+                    'backgroundColor': '#d3e0ea',
+                    'border': '1px solid #0074D9'}
                 ],
+                style_header={
+                    'textAlign': 'center',
+                    'paddingLeft': '6px'
+                },
             )
         ], style={
             'flex': '1',
@@ -224,9 +279,9 @@ def update_markers(bounds, selected_rows, table_data):
     for _, row in filtered_df.iterrows():
         is_selected = row['NOME_FANTASIA'] == selected_name
         icon = {
-            'iconUrl': 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png' if is_selected else 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-            'iconSize': [38, 55] if is_selected else [25, 41],
-            'iconAnchor': [19, 95] if is_selected else [12, 41],  # Fix red pin at bottom
+            'iconUrl': 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+            'iconSize': [25, 41],
+            'iconAnchor': [12, 41],
             'popupAnchor': [1, -34],
             'shadowSize': [41, 41]
         }
@@ -235,7 +290,9 @@ def update_markers(bounds, selected_rows, table_data):
                 position=[row['latitude'], row['longitude']],
                 icon=icon,
                 children=[
-                    dl.Tooltip(row['NOME_FANTASIA']),
+                    dl.Tooltip(html.Div([
+                        html.H4(row['NOME_FANTASIA'], style={'fontSize': '16px', 'margin': '0'})
+                    ])),
                     dl.Popup(html.Div([
                         html.H4(row['NOME_FANTASIA'], style={'fontSize': '16px', 'margin': '0'}),
                         html.P(row['FULL_ADDRESS'], style={'fontSize': '14px', 'margin': '5px 0'})
@@ -249,36 +306,62 @@ def update_markers(bounds, selected_rows, table_data):
 # Handle table update and selection
 @app.callback(
     [Output('table', 'data'), Output('selector', 'bounds'), Output('table', 'selected_rows')],
-    [Input('map', 'bounds'), Input('reset-btn', 'n_clicks'), Input({'type': 'marker', 'index': dash.dependencies.ALL}, 'n_clicks')],
+    [
+        Input('map', 'bounds'),
+        Input('reset-btn', 'n_clicks'),
+        Input('alvara-filter', 'value'),
+        Input('name-filter', 'value'),
+        Input('address-filter', 'value'),
+        Input({'type': 'marker', 'index': dash.dependencies.ALL}, 'n_clicks')
+    ],
     [State('selector', 'bounds'), State('table', 'data')]
 )
-def update_table_and_selection(map_bounds, n_clicks_reset, marker_clicks, current_bounds, table_data):
+def update_table_and_selection(map_bounds, n_clicks_reset, alvara_filter, name_filter, address_filter, marker_clicks, current_bounds, table_data):
     ctx = dash.callback_context
     if not ctx.triggered:
         return df.to_dict('records'), [[0, 0], [0, 0]], []
-    
-    if ctx.triggered[0]['prop_id'] == 'reset-btn.n_clicks':
+
+    triggered_id = ctx.triggered
+
+    if triggered_id == 'reset-btn.n_clicks':
         return df.to_dict('records'), [[0, 0], [0, 0]], []
-    
-    triggered_id = ctx.triggered[0]['prop_id']
-    if 'marker' in triggered_id:
-        marker_name = json.loads(triggered_id.split('.')[0])['index']
+
+    # Handle marker click
+    if isinstance(triggered_id, dict) and triggered_id.get('type') == 'marker':
+        marker_name = triggered_id['index']
         if table_data:
             for idx, row in enumerate(table_data):
                 if row['NOME_FANTASIA'] == marker_name:
                     return dash.no_update, dash.no_update, [idx]
         return dash.no_update, dash.no_update, []
-    
+
+    # Filter by map bounds and Alvará checkbox
+    filtered_df = df.copy()
+
+    # Apply Alvará filter (checkbox-based)
+    if alvara_filter:
+        filtered_df = filtered_df[filtered_df['IND_POSSUI_ALVARA'].str.upper().isin(alvara_filter)]
+
+    # Apply name substring filter
+    if name_filter:
+        filtered_df = filtered_df[filtered_df['NOME_FANTASIA'].str.contains(name_filter, case=False, na=False)]
+
+    # Apply address substring filter
+    if address_filter:
+        filtered_df = filtered_df[filtered_df['FULL_ADDRESS'].str.contains(address_filter, case=False, na=False)]
+
+    # Apply map bounds if available
     if map_bounds:
         lat_min, lon_min = map_bounds[0]
         lat_max, lon_max = map_bounds[1]
         rect = [lat_min, lon_min, lat_max, lon_max]
         result = []
         range_search(kd_tree, rect, result)
-        filtered_df = df.loc[result]
-        return filtered_df.to_dict('records'), [[0, 0], [0, 0]], []
+        valid_indices = filtered_df.index.intersection(result)
+        filtered_df = filtered_df.loc[valid_indices]
     
-    return df.to_dict('records'), [[0, 0], [0, 0]], []
+    return filtered_df.to_dict('records'), [[0, 0], [0, 0]], []
+
 
 # Run the Dash server
 if __name__ == '__main__':
