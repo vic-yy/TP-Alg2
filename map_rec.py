@@ -102,12 +102,16 @@ app.scripts.append_script({
 
 # Map and table layout
 app.layout = html.Div([
+    dcc.Store(id='initial-bounds', data=[[-20, -44], [-19, -43]]),
+    dcc.Interval(id='startup-trigger', interval=100, n_intervals=0, max_intervals=1),
+    dcc.Store(id='geojson-store'),
+
     # Left: Map
     html.Div([
         dl.Map(
             id='map',
             style={'width': '100%', 'height': '100%'},
-            center=[-19.9208, -43.9378],
+            center=[-19.8800, -43.9378],
             zoom=12,
             children=[
                 dl.TileLayer(),
@@ -258,10 +262,13 @@ app.layout = html.Div([
 # Update markers on map
 @app.callback(
     Output('markers', 'children'),
-    [Input('map', 'bounds'), Input('table', 'selected_rows')],
+    [Input('map', 'bounds'),
+     Input('initial-bounds', 'data'),
+     Input('table', 'selected_rows')],
     [State('table', 'data')]
 )
-def update_markers(bounds, selected_rows, table_data):
+def update_markers(bounds, initial_bounds, selected_rows, table_data):
+    bounds = bounds or initial_bounds
     if not bounds:
         return []
     lat_min, lon_min = bounds[0]
@@ -311,11 +318,22 @@ def update_markers(bounds, selected_rows, table_data):
         )
     return markers
 
+
+# callback to transfer data
+@app.callback(
+    Output('geojson-store', 'data'),
+    Input('edit_control', 'geojson')
+)
+def sync_geojson(geojson):
+    return geojson
+
+
 # Handle table update and selection
 @app.callback(
     [Output('table', 'data'), Output('table', 'selected_rows')],
     [
         Input('map', 'bounds'),
+        Input('initial-bounds', 'data'),
         Input('edit_control', 'geojson'), 
         Input('reset-btn', 'n_clicks'),
         Input('alvara-filter', 'value'),
@@ -325,10 +343,23 @@ def update_markers(bounds, selected_rows, table_data):
     ],
     [State('table', 'data')]
 )
-def update_table_and_selection(map_bounds, geojson, alvara_filter, name_filter, address_filter, marker_clicks, current_bounds, table_data):
+def update_table_and_selection(map_bounds, initial_bounds, geojson,
+                               reset_clicks, alvara_filter, name_filter, address_filter, 
+                               marker_clicks, table_data):
     ctx = dash.callback_context
-    if not ctx.triggered:
-        return df.to_dict('records'), []
+    triggered_id = ctx.triggered[0]["prop_id"] if ctx.triggered else ""
+
+    if not ctx.triggered or 'startup-trigger' in triggered_id:
+        bounds = map_bounds or initial_bounds
+        if bounds:
+            lat_min, lon_min = bounds[0]
+            lat_max, lon_max = bounds[1]
+            rect = [lat_min, lon_min, lat_max, lon_max]
+            result = []
+            range_search(kd_tree, rect, result)
+            return df.loc[result].to_dict('records'), []
+        else:
+            return df.to_dict('records'), []
 
     triggered_id = ctx.triggered[0]["prop_id"]
 
@@ -364,9 +395,13 @@ def update_table_and_selection(map_bounds, geojson, alvara_filter, name_filter, 
     if address_filter:
         filtered_df = filtered_df[filtered_df['FULL_ADDRESS'].str.contains(address_filter, case=False, na=False)]
 
-    
-    # Prioritize rectangle selection via geojson
-    if geojson and geojson.get("features"):
+    # Check if a valid rectangle has been drawn
+    has_rectangle = geojson and geojson.get("features") and any(
+        f.get("geometry") and f["geometry"].get("coordinates") for f in geojson["features"]
+    )
+
+    # Apply spatial filtering
+    if has_rectangle:
         feature = next((f for f in geojson["features"]
                         if f.get("geometry") and f["geometry"].get("coordinates")), None)
         if feature:
@@ -380,15 +415,17 @@ def update_table_and_selection(map_bounds, geojson, alvara_filter, name_filter, 
             range_search(kd_tree, rect, result)
             valid_indices = filtered_df.index.intersection(result)
             filtered_df = filtered_df.loc[valid_indices]
-    elif map_bounds:
-        # Fallback to map bounds if no rectangle was drawn
-        lat_min, lon_min = map_bounds[0]
-        lat_max, lon_max = map_bounds[1]
-        rect = [lat_min, lon_min, lat_max, lon_max]
-        result = []
-        range_search(kd_tree, rect, result)
-        valid_indices = filtered_df.index.intersection(result)
-        filtered_df = filtered_df.loc[valid_indices]
+    else:
+        # No rectangle → use visible map bounds
+        bounds = map_bounds or initial_bounds
+        if bounds:
+            lat_min, lon_min = bounds[0]
+            lat_max, lon_max = bounds[1]
+            rect = [lat_min, lon_min, lat_max, lon_max]
+            result = []
+            range_search(kd_tree, rect, result)
+            valid_indices = filtered_df.index.intersection(result)
+            filtered_df = filtered_df.loc[valid_indices]
 
     return filtered_df.to_dict('records'), []
 
