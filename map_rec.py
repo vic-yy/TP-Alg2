@@ -9,14 +9,14 @@ import os
 from pyproj import Transformer
 import json
 
-# Set dataset path to the same directory as the script
+# ---------------------------------------------------------
+# 1) CARREGA DADOS DE BARES E FAZ CONVERSÃO UTM → LAT/LON
+# ---------------------------------------------------------
 script_dir = os.path.dirname(os.path.abspath(__file__))
 data_path = os.path.join(script_dir, '20250401_bares_e_restaurantes.csv')
 
-# Load dataset
 df = pd.read_csv(data_path, encoding='utf-8', low_memory=False, sep=';')
 
-# Convert UTM to latitude/longitude (assuming UTM Zone 23S, EPSG:31983)
 transformer = Transformer.from_crs("EPSG:31983", "EPSG:4326", always_xy=True)
 def utm_to_latlon(geometry):
     try:
@@ -26,27 +26,25 @@ def utm_to_latlon(geometry):
     except:
         return np.nan, np.nan
 
-# Apply coordinate conversion
 df[['latitude', 'longitude']] = df['GEOMETRIA'].apply(utm_to_latlon).apply(pd.Series)
 df = df.dropna(subset=['latitude', 'longitude'])
 
-# Preprocess data
 df['NOME_FANTASIA'] = df['NOME_FANTASIA'].fillna(df['NOME'])
-
-# Create full address by combining address fields
 df['FULL_ADDRESS'] = df.apply(
     lambda row: f"{row['DESC_LOGRADOURO']} {row['NOME_LOGRADOURO']}, {row['NUMERO_IMOVEL']}"
                 f"{', ' + row['COMPLEMENTO'] if pd.notna(row['COMPLEMENTO']) else ''}, {row['NOME_BAIRRO']}",
     axis=1
 )
 
-# Convert date to datetime format
 df['DATA_INICIO_ATIVIDADE'] = pd.to_datetime(df['DATA_INICIO_ATIVIDADE'], format='%d-%m-%Y', errors='coerce')
 df['DATA_INICIO_STR'] = df['DATA_INICIO_ATIVIDADE'].dt.strftime('%Y-%m-%d')
 
-df = df[['NOME_FANTASIA', 'latitude', 'longitude', 'FULL_ADDRESS', 'DATA_INICIO_ATIVIDADE', 'IND_POSSUI_ALVARA', 'DATA_INICIO_STR']]
+df = df[['NOME_FANTASIA', 'latitude', 'longitude', 'FULL_ADDRESS',
+         'DATA_INICIO_ATIVIDADE', 'IND_POSSUI_ALVARA', 'DATA_INICIO_STR']]
 
-# k-d Tree implementation
+# ---------------------------------------------------------
+# 2) MONTA K-D TREE PARA BUSCAR PONTOS NO RETÂNGULO VISÍVEL
+# ---------------------------------------------------------
 class KDTreeNode:
     def __init__(self, point, data, axis, left=None, right=None):
         self.point = point
@@ -79,7 +77,7 @@ def range_search(node, rect, result, depth=0):
     point_val = node.point[axis]
     
     if min_val <= point_val <= max_val:
-        if (rect[0] <= node.point[0] <= rect[2] and rect[1] <= node.point[1] <= rect[3]):
+        if rect[0] <= node.point[0] <= rect[2] and rect[1] <= node.point[1] <= rect[3]:
             result.append(node.data)
     
     if point_val >= min_val:
@@ -87,26 +85,69 @@ def range_search(node, rect, result, depth=0):
     if point_val <= max_val:
         range_search(node.right, rect, result, depth + 1)
 
-# Build k-d tree
 points = df[['latitude', 'longitude']].values.tolist()
 data = df.index.tolist()
 kd_tree = build_kd_tree(points, data)
 
-# Dash app setup
+# ---------------------------------------------------------
+# 3) CARREGA E REPROJETA O GEOJSON DOS BAIRROS (EPSG:32723 → 4326)
+# ---------------------------------------------------------
+bairros_geojson_path = os.path.join(script_dir, 'bairro_popular_lei1069814012014.geojson')
+with open(bairros_geojson_path, encoding='utf-8') as f:
+    bairros_raw = json.load(f)
+
+# Transformer de EPSG:32723 → EPSG:4326
+transformer_bairros = Transformer.from_crs("EPSG:32723", "EPSG:4326", always_xy=True)
+
+def reproject_coords_to_lonlat(xy):
+    # Recebe [x, y] em EPSG:32723, devolve [lon, lat] em 4326
+    lon, lat = transformer_bairros.transform(xy[0], xy[1])
+    return [lon, lat]
+
+def reproject_geometry(geometry):
+    # Trabalha apenas com MultiPolygon conforme seu GeoJSON
+    geom_type = geometry['type']
+    if geom_type == 'MultiPolygon':
+        new_coords = []
+        for polygon in geometry['coordinates']:
+            new_polygon = []
+            for ring in polygon:
+                # cada ring é lista de pontos [[x,y], [x,y], ...]
+                new_ring = [reproject_coords_to_lonlat(pt) for pt in ring]
+                new_polygon.append(new_ring)
+            new_coords.append(new_polygon)
+        return {'type': 'MultiPolygon', 'coordinates': new_coords}
+    # se por acaso houver outro tipo (não esperado), devolve original
+    return geometry
+
+# Monta o GeoJSON reprojetado para WGS84
+bairros_geojson = {"type": bairros_raw["type"], "features": []}
+for feat in bairros_raw["features"]:
+    new_feat = {
+        "type": feat["type"],
+        "properties": feat["properties"],
+        "geometry": reproject_geometry(feat["geometry"])
+    }
+    bairros_geojson["features"].append(new_feat)
+
+# ---------------------------------------------------------
+# 4) CONFIGURA APP DASH + LAYERS
+# ---------------------------------------------------------
 app = dash.Dash(__name__, external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'])
 
-# Custom JavaScript for marker hover and click
+# Necessário para hover/click em markers no dash_leaflet
 app.scripts.append_script({
     'external_url': 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js'
 })
 
-# Map and table layout
 app.layout = html.Div([
     dcc.Store(id='initial-bounds', data=[[-20, -44], [-19, -43]]),
     dcc.Interval(id='startup-trigger', interval=100, n_intervals=0, max_intervals=1),
     dcc.Store(id='geojson-store'),
 
-    # Left: Map
+    # ───────────────────────────────────────────────────────────
+    # LEFT: MAPA
+    # ───────────────────────────────────────────────────────────
     html.Div([
         dl.Map(
             id='map',
@@ -115,6 +156,10 @@ app.layout = html.Div([
             zoom=12,
             children=[
                 dl.TileLayer(),
+
+                # camada vazia para bairros; será preenchida pelo callback
+                dl.LayerGroup(id='bairros-group'),
+
                 dl.FeatureGroup([
                     dl.EditControl(
                         id="edit_control",
@@ -134,12 +179,12 @@ app.layout = html.Div([
         'height': '100%'
     }),
 
-    # Right: Table + Filter Buttons
+    # ───────────────────────────────────────────────────────────
+    # RIGHT: TABELA + FILTROS
+    # ───────────────────────────────────────────────────────────
     html.Div([
-        
-        # Buttons and Filters
         html.Div([
-            # Row 1: Reset Button
+            # Botão Reset
             html.Div([
                 html.Button('Reset Filter', id='reset-btn', style={
                     'backgroundColor': '#0074D9',
@@ -156,31 +201,37 @@ app.layout = html.Div([
                 })
             ], style={'marginBottom': '10px'}),
 
-            # Row 2: Nome Filter
+            # Filtro por Nome
             html.Div([
                 html.Label('Nome:', style={'marginBottom': '0px', 'padding': '5px', 'width': '90px', 'font-weight': 'bold'}),
-                dcc.Input(id='name-filter', type='text', placeholder='Buscar por nome...', debounce=True, style={
-                    'width': '100%', 'height': '32px'
-                })
+                dcc.Input(
+                    id='name-filter',
+                    type='text',
+                    placeholder='Buscar por nome...',
+                    debounce=True,
+                    style={'width': '100%', 'height': '32px'}
+                )
             ], style={'marginBottom': '5px', 'display': 'flex', 'flexDirection': 'row'}),
 
-            # Row 3: Endereço Filter
+            # Filtro por Endereço
             html.Div([
                 html.Label('Endereço:', style={'marginBottom': '0px', 'padding': '5px', 'width': '90px', 'font-weight': 'bold'}),
-                dcc.Input(id='address-filter', type='text', placeholder='Buscar por endereço...', debounce=True, style={
-                    'width': '100%', 'height': '32px'
-                })
+                dcc.Input(
+                    id='address-filter',
+                    type='text',
+                    placeholder='Buscar por endereço...',
+                    debounce=True,
+                    style={'width': '100%', 'height': '32px'}
+                )
             ], style={'marginBottom': '5px', 'display': 'flex', 'flexDirection': 'row'}),
 
-            # Row 4: Alvará Checkboxes
+            # Filtro Alvará
             html.Div([
                 html.Label('Alvará:', style={'marginBottom': '0px', 'padding': '5px', 'width': '90px', 'font-weight': 'bold'}),
                 dcc.Checklist(
                     id='alvara-filter',
-                    options=[
-                        {'label': 'Sim', 'value': 'SIM'},
-                        {'label': 'Não', 'value': 'NÃO'}
-                    ],
+                    options=[{'label': 'Sim', 'value': 'SIM'},
+                             {'label': 'Não', 'value': 'NÃO'}],
                     value=['SIM', 'NÃO'],
                     labelStyle={'display': 'inline-block', 'marginRight': '10px'},
                     style={
@@ -191,10 +242,30 @@ app.layout = html.Div([
                         'marginLeft': '-5px'
                     }
                 )
-            ], style={'marginBottom': '5px', 'display': 'flex', 'flexDirection': 'row'})
+            ], style={'marginBottom': '5px', 'display': 'flex', 'flexDirection': 'row'}),
+
+            # ─── NOVO: Toggle Bairros ───────────────────────────
+            html.Div([
+                html.Label('Bairros:', style={'marginBottom': '0px', 'padding': '5px', 'width': '90px', 'font-weight': 'bold'}),
+                dcc.Checklist(
+                    id='bairros-toggle',
+                    options=[{'label': '', 'value': 'SHOW'}],
+                    value=[],
+                    labelStyle={'display': 'inline-block', 'marginRight': '10px'},
+                    style={
+                        'display': 'flex',
+                        'flexDirection': 'row',
+                        'alignItems': 'center',
+                        'padding': '0',
+                        'marginLeft': '-5px'
+                    }
+                )
+            ], style={'marginBottom': '10px', 'display': 'flex', 'flexDirection': 'row'}),
+            # ────────────────────────────────────────────────────
+
         ]),
 
-        # Scrollable Table Container
+        # Tabela rolável
         html.Div([
             dash_table.DataTable(
                 id='table',
@@ -206,10 +277,7 @@ app.layout = html.Div([
                 ],
                 page_size=10,
                 sort_action='native',
-                style_table={
-                    'height': '100%',
-                    'overflowY': 'auto'
-                },
+                style_table={'height': '100%', 'overflowY': 'auto'},
                 style_cell={
                     'textAlign': 'left',
                     'whiteSpace': 'normal',
@@ -218,24 +286,17 @@ app.layout = html.Div([
                 },
                 style_data_conditional=[
                     {'if': {'column_id': 'DATA_INICIO_STR'},
-                    'width': '100px', 'minWidth': '100px', 'maxWidth': '100px',
-                    'textAlign': 'center'},
+                     'width': '100px', 'minWidth': '100px', 'maxWidth': '100px',
+                     'textAlign': 'center'},
                     {'if': {'column_id': 'IND_POSSUI_ALVARA'}, 'textAlign': 'center'},
-                    {'if': {'row_index': 'odd'},
-                    'backgroundColor': '#f0f0f0'},
+                    {'if': {'row_index': 'odd'}, 'backgroundColor': '#f0f0f0'},
                     {'if': {'state': 'selected'},
-                    'backgroundColor': '#d3e0ea',
-                    'border': '1px solid #0074D9'}
+                     'backgroundColor': '#d3e0ea',
+                     'border': '1px solid #0074D9'}
                 ],
-                style_header={
-                    'textAlign': 'center',
-                    'paddingLeft': '6px'
-                },
+                style_header={'textAlign': 'center', 'paddingLeft': '6px'},
             )
-        ], style={
-            'flex': '1',
-            'overflow': 'auto'
-        })
+        ], style={'flex': '1', 'overflow': 'auto'})
     ], style={
         'flex': '1',
         'minWidth': '300px',
@@ -248,7 +309,7 @@ app.layout = html.Div([
 ], style={
     'display': 'flex',
     'flexDirection': 'row',
-    'flexWrap': 'wrap',  # Enables responsiveness
+    'flexWrap': 'wrap',
     'gap': '0px',
     'height': '98vh',
     'width': '98vw',
@@ -258,8 +319,9 @@ app.layout = html.Div([
     'backgroundColor': "#ffffff"
 })
 
-
-# Update markers on map
+# ───────────────────────────────────────────────────────────
+# CALLBACK: Atualiza marcadores conforme retângulo visível
+# ───────────────────────────────────────────────────────────
 @app.callback(
     Output('markers', 'children'),
     [Input('map', 'bounds'),
@@ -277,22 +339,20 @@ def update_markers(bounds, initial_bounds, selected_rows, table_data):
     
     result = []
     range_search(kd_tree, rect, result)
-    
     filtered_df = df.loc[result]
     
-    # Skip random sampling if a row is selected
+    # Se houver mais de 200 pontos e nenhum selecionado, amostra aleatoriamente 200
     if not selected_rows or not table_data:
         if len(filtered_df) > 200:
             filtered_df = filtered_df.sample(n=200, random_state=None)
     
-    # Get selected establishment from table
     selected_name = None
     if selected_rows and table_data:
         selected_name = table_data[selected_rows[0]]['NOME_FANTASIA']
     
     markers = []
     for _, row in filtered_df.iterrows():
-        is_selected = row['NOME_FANTASIA'] == selected_name
+        is_selected = (row['NOME_FANTASIA'] == selected_name)
         icon = {
             'iconUrl': 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
             'iconSize': [25, 41],
@@ -318,8 +378,33 @@ def update_markers(bounds, initial_bounds, selected_rows, table_data):
         )
     return markers
 
+# ───────────────────────────────────────────────────────────
+# CALLBACK: Exibe ou oculta a camada de bairros
+# ───────────────────────────────────────────────────────────
+@app.callback(
+    Output('bairros-group', 'children'),
+    [Input('bairros-toggle', 'value')]
+)
+def toggle_bairros_layer(selected):
+    if 'SHOW' in selected:
+        # Se marcado, retorna um dl.GeoJSON com estilo bem evidente
+        return [
+            dl.GeoJSON(
+                data=bairros_geojson,
+                options=dict(style=dict(
+                    color='black',
+                    weight=3,
+                    dashArray='10,10',
+                    fillOpacity=0
+                ))
+            )
+        ]
+    # Se desmarcado ou vazio, não retorna nada
+    return []
 
-# callback to transfer data
+# ───────────────────────────────────────────────────────────
+# CALLBACK: Sincronia do GeoJSON desenhado (não mexer)
+# ───────────────────────────────────────────────────────────
 @app.callback(
     Output('geojson-store', 'data'),
     Input('edit_control', 'geojson')
@@ -327,8 +412,9 @@ def update_markers(bounds, initial_bounds, selected_rows, table_data):
 def sync_geojson(geojson):
     return geojson
 
-
-# Handle table update and selection
+# ───────────────────────────────────────────────────────────
+# CALLBACK: Atualiza tabela conforme filtros e seleção
+# ───────────────────────────────────────────────────────────
 @app.callback(
     [Output('table', 'data'), Output('table', 'selected_rows')],
     [
@@ -349,6 +435,7 @@ def update_table_and_selection(map_bounds, initial_bounds, geojson,
     ctx = dash.callback_context
     triggered_id = ctx.triggered[0]["prop_id"] if ctx.triggered else ""
 
+    # Situação de inicialização
     if not ctx.triggered or 'startup-trigger' in triggered_id:
         bounds = map_bounds or initial_bounds
         if bounds:
@@ -361,13 +448,11 @@ def update_table_and_selection(map_bounds, initial_bounds, geojson,
         else:
             return df.to_dict('records'), []
 
-    triggered_id = ctx.triggered[0]["prop_id"]
-
-    # Handle reset
+    # Botão Reset
     if 'reset-btn' in triggered_id:
         return df.to_dict('records'), []
 
-    # Handle marker click
+    # Clique em marcador → seleciona linha correspondente
     if isinstance(ctx.triggered[0]["value"], dict) and ctx.triggered[0]["value"] is not None:
         marker_name = ctx.triggered[0]["value"].get("index")
         if table_data:
@@ -376,31 +461,23 @@ def update_table_and_selection(map_bounds, initial_bounds, geojson,
                     return dash.no_update, [idx]
         return dash.no_update, []
 
-    # Filter by map bounds and Alvará checkbox
+    # Agora aplicamos filtros (Alvará, nome, endereço)
     filtered_df = df.copy()
-
-    # === Fix: Ensure filters are strings ===
     name_filter = name_filter if isinstance(name_filter, str) else ''
     address_filter = address_filter if isinstance(address_filter, str) else ''
 
-    # Apply Alvará filter (checkbox-based)
     if alvara_filter:
         filtered_df = filtered_df[filtered_df['IND_POSSUI_ALVARA'].str.upper().isin(alvara_filter)]
-
-    # Apply name substring filter
     if name_filter:
         filtered_df = filtered_df[filtered_df['NOME_FANTASIA'].str.contains(name_filter, case=False, na=False)]
-
-    # Apply address substring filter
     if address_filter:
         filtered_df = filtered_df[filtered_df['FULL_ADDRESS'].str.contains(address_filter, case=False, na=False)]
 
-    # Check if a valid rectangle has been drawn
+    # Filtragem espacial por retângulo desenhado ou por limites do mapa
     has_rectangle = geojson and geojson.get("features") and any(
         f.get("geometry") and f["geometry"].get("coordinates") for f in geojson["features"]
     )
 
-    # Apply spatial filtering
     if has_rectangle:
         feature = next((f for f in geojson["features"]
                         if f.get("geometry") and f["geometry"].get("coordinates")), None)
@@ -416,7 +493,6 @@ def update_table_and_selection(map_bounds, initial_bounds, geojson,
             valid_indices = filtered_df.index.intersection(result)
             filtered_df = filtered_df.loc[valid_indices]
     else:
-        # No rectangle → use visible map bounds
         bounds = map_bounds or initial_bounds
         if bounds:
             lat_min, lon_min = bounds[0]
@@ -430,6 +506,8 @@ def update_table_and_selection(map_bounds, initial_bounds, geojson,
     return filtered_df.to_dict('records'), []
 
 
-# Run the Dash server
+# ───────────────────────────────────────────────────────────
+# EXECUTA O SERVIDOR
+# ───────────────────────────────────────────────────────────
 if __name__ == '__main__':
     app.run(debug=True, port=8050)
