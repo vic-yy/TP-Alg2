@@ -1,0 +1,125 @@
+,Nome do Buteco,Endereço,Latitude,Longitude,Unnamed: 4,Logradouro,Número,chave_endereco_buteco,match_endereco,Match,match_termo_manual,Comida de Boteco
+0,Alexandre’s Bar,"Rua David Alves do Vale, 68 | Santa Rosa, Belo Horizonte - MG",-19.8634011,-43.9441692,,DAVID ALVES DO VALE,68,DAVID ALVES DO VALE_68,True,1,,1
+1,Amarelim do Prado,"Avenida Francisco Sá, 658 | Prado, Belo Horizonte - MG",-19.9280595,-43.959751,,FRANCISCO SA,658,FRANCISCO SA_658,True,1,,1
+2,Andrade’s Beer,"Rua Dona Geni, 32 |  Belo Horizonte - MG",-19.8037827,-43.9961213,,DONA GENI,32,DONA GENI_32,True,1,,1
+3,Arcos Bar,"Rua da Bahia, 1144 | Centro, Belo Horizonte - MG",-19.9258695,-43.9376996,,DA BAHIA,1144,DA BAHIA_1144,True,1,,1
+4,Armazém Santa Amélia,"Avenida da Sinfonia, 253 | Santa Amélia, Belo Horizonte - MG",-19.8325573,-43.9724063,,DA SINFONIA,253,DA SINFONIA_253,True,1,,1
+5,Avalanche Espeteria,"Avenida Doutor Álvaro Camargos, 1113 | São João Batista, Belo Horizonte - MG",-19.8283385,-43.9620701,0.0,DOUTOR ALVARO CAMARGOS,1113,DOUTOR ALVARO CAMARGOS_1113,True,1,,1
+6,Azougue Fogo e Bar,"Rua do Ouro, 835 | Serra, Belo Horizonte - MG",-19.9403611,-43.9200245,,DO OURO,835,DO OURO_835,True,1,,1
+7,Baiuca,"Rua Piauí, 1884 | Funcionários, Belo Horizonte - MG",-19.9343945,-43.9276279,,PIAUI,1884,PIAUI_1884,True,1,,1
+8,Bar Bambú,"Rua Divisa Nova, 670 | Salgado Filho, Belo Horizonte - MG",-19.9440127,-43.9840632,,DIVISA NOVA,670,DIVISA NOVA_670,True,1,,1
+9,Bar Bendita Baderna,"Rua Silva Fortes, 47 | União, Belo Horizonte - MG",-19.8811789,-43.9272578,,SILVA FORTES,47,SILVA FORTES_47,True,1,,1
+10,Bar da Cíntia,"Rua Pastor Rui Franco, 257 | São João Batista (Venda Nova), Belo Horizonte - MG",-19.8168676,-43.9694756,,PASTOR RUI FRANCO,257,PASTOR RUI FRANCO_257,True,1,,1
+11,Bar da Fia,"Rua dos Astecas, 2722 | Santa Mônica, Belo Horizonte - MG",-19.8299231,-43.9791637,,DOS ASTECAS,2722,DOS ASTECAS_2722,True,1,,1
+12,Bar da Lu,"Rua Geralda Marinho, 41 | São João Batista (Venda Nova), Belo Horizonte - MG",-19.8268831,-43.9645853,,GERALDA MARINHO,41,GERALDA MARINHO_41,True,1,,1
+13,Bar da Silvânia,"Rua Soares Nogueira, 801 | Camargos, Belo Horizonte - MG",-19.9402357,-44.0216093,,SOARES NOGUEIRA,801,SOARES NOGUEIRA_801,True,1,,1
+14,Bar do Bartolomeu,"Rua Arthur Luchesi, 356 | Santa Helena (Barreiro), Belo Horizonte - MG",-19.985134,-44.0112649,,ARTHUR LUCHESI,356,ARTHUR LUCHESI_356,False,0,False,1
+15,Bar do Bem,"RUA VICENTINA COUTINHO CAMARGOS, 100, BELO HORIZONTE - MG",-19.9153621,-44.0062588,,VICENTINA COUTINHO CAMARGOS,100,VICENTINA COUTINHO CAMARGOS_100,True,1,,1
+16,Bar do Kim,"Rua Júlio de Castilho, 1071 | Palmeiras, Belo Horizonte – MG",Não encontrado,Não encontrado,,JULIO DE CASTILHO,1071,JULIO DE CASTILHO_1071,True,1,,1
+17,Bar do Nelson,"Av Vicente Risola, 1000 | Belo Horizonte - MG",Não encontrado,Não encontrado,,VICENTE RISOLA,1000,VICENTE RISOLA_1000,True,1,,1
+18,Bar do Primo,"Avenida Amazonas, 4649 | Nova Suíça, Belo Horizonte - MG",-19.9297695,-43.9779451,,AMAZONAS,4649,AMAZONAS_4649,True,1,,1
+19,Bar do Regis,"Rua Gávea, 422 | Jardim América, Belo Horizonte - MG",-19.9388489,-43.9752421,,GAVEA,422,GAVEA_422,True,1,,1
+20,Bar do Romeu,"Rua Aniri, 8 | Guarani, Belo Horizonte - MG",-19.843663,-43.9299691,,ANIRI,8,ANIRI_8,True,1,True,1
+21,Bar dos Meninos,"Rua Lindolfo Deodoro, 503 | Salgado Filho, Belo Horizonte - MG",-19.9396503,-43.9789774,,LINDOLFO DEODORO,503,LINDOLFO DEODORO_503,True,1,,1
+22,Bar Du Du,"Rua Violeta, 369 | Esplanada, Belo Horizonte - MG",-19.9068346,-43.9050515,,VIOLETA,369,VIOLETA_369,True,1,,1
+23,Bar e Restaurante Bom Sabor,"Rua Java, 386 | Nova Suíça, Belo Horizonte - MG",-19.9333627,-43.9746709,,JAVA,386,JAVA_386,True,1,,1
+24,Bar e Restaurante do Joãozinho,"Rua Pinheiro Chagas, 295 | Barreiro, Belo Horizonte - MG",-19.9777939,-44.0137931,,PINHEIRO CHAGAS,295,PINHEIRO CHAGAS_295,True,1,,1
+25,Bar Estabelecimento,"Rua Monte Alegre, 160 | Serra, Belo Horizonte - MG",-19.9363019,-43.9239093,,MONTE ALEGRE,160,MONTE ALEGRE_160,True,1,,1
+26,Bar Junto Juntinho,"Rua Cura D’Ars, 542 | Prado, Belo Horizonte - MG",-19.9260694,-43.9640742,,CURA DARS,542,CURA DARS_542,False,0,False,1
+27,Bar Mania Mineira,"Rua Paracatu, 1099 | Santo Agostinho, Belo Horizonte - MG",-19.9316023,-43.9544742,,PARACATU,1099,PARACATU_1099,True,1,,1
+28,Bar Pompéu,"Rua São Miguel, 779 | Itapoã, Belo Horizonte - MG",-19.8431885,-43.9565294,,SAO MIGUEL,779,SAO MIGUEL_779,True,1,,1
+29,Bar Stella,"Avenida Saramenha, 1599 | Guarani, Belo Horizonte - MG",-19.8454942,-43.9155173,,SARAMENHA,1599,SARAMENHA_1599,False,0,False,1
+30,Bar Temático Sta. Teresa,"Rua Pirite, 187 | Belo Horizonte - MG",-19.9104623,-43.9084168,,PIRITE,187,PIRITE_187,True,1,,1
+31,Barrigudinha Buteco,"Avenida dos Engenheiros, 1071 | Alípio de Melo, Belo Horizonte - MG",-19.8902904,-44.0007213,,DOS ENGENHEIROS,1071,DOS ENGENHEIROS_1071,True,1,,1
+32,Barzim dos amigos,"Rua Lindolfo de Azevedo, 1263 | Jardim América, Belo Horizonte - MG",-19.9434681,-43.9740084,,LINDOLFO DE AZEVEDO,1263,LINDOLFO DE AZEVEDO_1263,True,1,,1
+33,Bazin Bar,"Rua Orozimbo Nonato, 1053 | Dona Clara, Belo Horizonte - MG",-19.8579245,-43.9389316,,OROZIMBO NONATO,1053,OROZIMBO NONATO_1053,True,1,True,1
+34,Beco Restaurante,"Rua Tamoios, 232 | Belo Horizonte - MG",-19.7618843,-43.9457917,,TAMOIOS,232,TAMOIOS_232,True,1,True,1
+35,Benjamin Bar,"Rua Coronel José Benjamim, 770 | Padre Eustáquio, Belo Horizonte - MG",-19.9190884,-43.9730301,,CORONEL JOSE BENJAMIM,770,CORONEL JOSE BENJAMIM_770,True,1,,1
+36,Boteco 86,"Rua Jacarina, 86 | Padre Eustáquio, Belo Horizonte - MG",-19.913254,-43.9719321,,JACARINA,86,JACARINA_86,True,1,,1
+37,Botequim Buritis,"Rua Vitório Magnavaca, 39 | Buritis, Belo Horizonte - MG",Não encontrado,Não encontrado,,VITORIO MAGNAVACA,39,VITORIO MAGNAVACA_39,True,1,True,1
+38,Botequim de Lourdes,"Rua Curitiba, 2039 | Lourdes, Belo Horizonte - MG",-19.9306128,-43.944367,,CURITIBA,2039,CURITIBA_2039,True,1,,1
+39,Buteco do Lili,"R. Líbero Badaró, 493 - Dona Clara, Belo Horizonte - MG, 31255-620",Não encontrado,Não encontrado,,LIBERO BADARO,493,LIBERO BADARO_493,True,1,,1
+40,Buteco do Rod,"Rua José Moura Peçanha, 12 | Ouro Preto, Belo Horizonte - MG",-19.8743166,-43.9881223,,JOSE MOURA PECANHA,12,JOSE MOURA PECANHA_12,True,1,,1
+41,Buteco Tô D’Boa,"Avenida Virgílio de Melo Franco, 400 | Jardim Atlântico, Belo Horizonte - MG",Não encontrado,Não encontrado,,VIRGILIO DE MELO FRANCO,400,VIRGILIO DE MELO FRANCO_400,True,1,,1
+42,Buteco’s Bar,"R. Ernesto Braga, 2 - Jardim Atlântico, Belo Horizonte - MG, 31555-040",Não encontrado,Não encontrado,,ERNESTO BRAGA,2,ERNESTO BRAGA_2,False,0,False,1
+43,Butiquim On Cê Tá?,"Avenida Gen. Olímpio Mourão Filho, 754 | Itapoã, Belo Horizonte - MG",-19.8291011,-43.9605314,,GEN. OLIMPIO MOURAO FILHO,754,GEN. OLIMPIO MOURAO FILHO_754,True,1,True,1
+44,Café Bahia,"Rua Tupis, 369 | Centro, Belo Horizonte - MG",-19.5613341,-44.0779325,,TUPIS,369,TUPIS_369,True,1,True,1
+45,Café Palhares,"Rua dos Tupinambás, 638 | Centro, Belo Horizonte - MG",-19.917892,-43.938262,,DOS TUPINAMBAS,638,DOS TUPINAMBAS_638,True,1,,1
+46,Camisola Bar,"Rua Luther King, 242 | Cidade Nova, Belo Horizonte - MG",-19.8926606,-43.924606,,LUTHER KING,242,LUTHER KING_242,True,1,,1
+47,Canela Amarela,"Praça Leonardo Gutierrez, 195 | Gutierrez, Belo Horizonte - MG",-19.9357988,-43.9599038,,ACA LEONARDO GUTIERREZ,195,ACA LEONARDO GUTIERREZ_195,True,1,True,1
+48,Cantina Arte Quintal,"Rua Realengo, 150 | Caiçara, Belo Horizonte - MG",-19.9014096,-43.9756523,,REALENGO,150,REALENGO_150,True,1,,1
+49,Cantinho da Baiana,"Avenida Itaité, 422 | São Geraldo, Belo Horizonte - MG",-19.8972077,-43.8960229,,ITAITE,422,ITAITE_422,True,1,,1
+50,Casa da Madrinha,"Avenida Barbacena, 212 | Barro Preto, Belo Horizonte - MG",-19.9240497,-43.9531932,,BARBACENA,212,BARBACENA_212,True,1,,1
+51,Cervejaria Pajé,"Avenida Capim Branco, 419 | Vista Alegre, Belo Horizonte - MG",-19.9547924,-43.9976058,,CAPIM BRANCO,419,CAPIM BRANCO_419,True,1,,1
+52,Chapa Mágica,"Avenida Waldomiro Lobo, 305 | Guarani, Belo Horizonte - MG",-19.8441193,-43.9242894,,WALDOMIRO LOBO,305,WALDOMIRO LOBO_305,True,1,,1
+53,Choperia América Norte Sul,"Rua Chico Rei, 190 | Estrela do Oriente, Belo Horizonte - MG",-19.9615872,-43.9847596,,CHICO REI,190,CHICO REI_190,True,1,True,1
+54,Chopp da Esquina,"Rua Garret, 263 | Nova Granada, Belo Horizonte - MG",-19.9432796,-43.9684262,,GARRET,263,GARRET_263,True,1,,1
+55,Companhia do Dino,"Avenida Joaquim Clemente, 682 | Floramar, Belo Horizonte - MG",-19.8396478,-43.9332774,,JOAQUIM CLEMENTE,682,JOAQUIM CLEMENTE_682,False,0,False,0
+56,Conectados Bar,"Avenida Francisco Sá, 280 | Prado, Belo Horizonte - MG",-19.924344,-43.9592689,,FRANCISCO SA,280,FRANCISCO SA_280,False,0,False,0
+57,COSMOS,"Rua Vicente Risola, 1305 - Santa Ines, Belo Horizonte - MG, 31080-160",-19.8899984,-43.9086241,,VICENTE RISOLA,1305,VICENTE RISOLA_1305,True,1,,1
+58,Deck Boi na Brasa,"Rua Desembargador José Satyro, 302 | Castelo, Belo Horizonte - MG",-19.8886426,-43.9960496,,DESEMBARGADOR JOSE SATYRO,302,DESEMBARGADOR JOSE SATYRO_302,False,0,False,1
+59,Dona Dora,"Rua Rio de Janeiro, 1205 | Centro, Belo Horizonte - MG",-19.925814,-43.9404836,,RIO DE JANEIRO,1205,RIO DE JANEIRO_1205,True,1,,1
+60,Dona Ju Gastro Bar,"Estrada dos Borges, 1520 | Jardim Vitória, Belo Horizonte - MG",Não encontrado,Não encontrado,,DOS BORGES,1520,DOS BORGES_1520,True,1,,1
+61,Dona Suica,"Rua João Samaha, 390 | São João Batista (Venda Nova), Belo Horizonte - MG",-19.8240134,-43.962794,,JOAO SAMAHA,390,JOAO SAMAHA_390,True,1,,1
+62,Ember BBQ,"Rua São Romão, 460 | São Pedro, Belo Horizonte - MG",-19.9450728,-43.9402223,,SAO ROMAO,460,SAO ROMAO_460,True,1,,1
+63,Espetinho do Boi,"Rua São Paulo da Cruz, 357 | Barreiro, Belo Horizonte - MG",-19.9810622,-44.0133834,,SAO PAULO DA CRUZ,357,SAO PAULO DA CRUZ_357,True,1,,1
+64,Espetinhos do Paulão,"Rua Álvaro Mata, 466 | Belo Horizonte - MG",-19.8860185,-43.9578799,,ALVARO MATA,466,ALVARO MATA_466,False,0,False,1
+65,Espettinho.com,"Rua Eli Seabra Filho, 510 | Buritis, Belo Horizonte - MG",-19.9756214,-43.9751097,,ELI SEABRA FILHO,510,ELI SEABRA FILHO_510,True,1,,1
+66,Fogão de Minas,"Avenida Doutor Cristiano Guimarães, 1911 | Planalto, Belo Horizonte - MG",-19.8221025,-43.9525014,,DOUTOR CRISTIANO GUIMARAES,1911,DOUTOR CRISTIANO GUIMARAES_1911,True,1,,1
+67,Garagge Vintage,"Avenida Doutor Cristiano Guimarães, 1258 | Planalto, Belo Horizonte - MG",-19.8315762,-43.9547337,,DOUTOR CRISTIANO GUIMARAES,1258,DOUTOR CRISTIANO GUIMARAES_1258,True,1,,1
+68,Geraldin da Cida,"Rua Contria, 1459 | Grajaú, Belo Horizonte - MG",-19.936342,-43.968268,,CONTRIA,1459,CONTRIA_1459,True,1,,1
+69,Golden Grill,"Rua Amílcar Cabral, 515 | Milionários, Belo Horizonte - MG",-19.9837734,-44.0036387,,AMILCAR CABRAL,515,AMILCAR CABRAL_515,True,1,,1
+70,Iracema Bar,"Rua Almandina, 56 | Belo Horizonte - MG",-19.9182962,-43.9246508,,ALMANDINA,56,ALMANDINA_56,True,1,,1
+71,Ivo Grill,"Rua Professor Tristão da Cunha, 183 | Belo Horizonte - MG",-19.838757,-43.9464948,,PROFESSOR TRISTAO DA CUNHA,183,PROFESSOR TRISTAO DA CUNHA_183,True,1,,1
+72,Já To Inno,"Rua Benjamim Dias, 379 | Belo Horizonte - MG",-20.381055,-43.5107743,,BENJAMIM DIAS,379,BENJAMIM DIAS_379,True,1,,1
+73,Juzé Bar,"Rua Carlos Sá, 180 | Jardim Atlântico, Belo Horizonte - MG",-19.8414871,-43.9890445,,CARLOS SA,180,CARLOS SA_180,True,1,,1
+74,Köbes Emporium Bar,"Rua Professor Raimundo Nonato, 31 | Santa Tereza, Belo Horizonte - MG",-19.9104906,-43.9160165,,PROFESSOR RAIMUNDO NONATO,31,PROFESSOR RAIMUNDO NONATO_31,True,1,True,1
+75,Koqueiros Bar,"Avenida Silviano Brandão, 1293 | Sagrada Família, Belo Horizonte - MG",-19.9109127,-43.9260469,,SILVIANO BRANDAO,1293,SILVIANO BRANDAO_1293,True,1,,1
+76,Lá Ele Bar,"Av. General Carlos Guedes, 165 | Planalto, Belo Horizonte - MG",-19.8373712,-43.9480678,,. GENERAL CARLOS GUEDES,165,. GENERAL CARLOS GUEDES_165,True,1,True,1
+77,Leo da Quadra,"Rua Oliveira Lisboa, 107 | Barreiro, Belo Horizonte - MG",-19.9761639,-44.0131047,,OLIVEIRA LISBOA,107,OLIVEIRA LISBOA_107,True,1,,1
+78,Locomotiva’s Bar,"Rua Carmésia, 568 | Santa Inês, Belo Horizonte - MG",-19.8815093,-43.9090525,,CARMESIA,568,CARMESIA_568,True,1,,1
+79,Magnífico Quintal,"Rua Jefferson de Oliveira, 56 | Santa Amélia, Belo Horizonte - MG",-19.8421348,-43.9759104,,JEFFERSON DE OLIVEIRA,56,JEFFERSON DE OLIVEIRA_56,True,1,True,1
+80,Magrelo’s Bar,"Avenida Serrana, 635 | Serrano, Belo Horizonte - MG",-19.8728577,-44.0135935,,SERRANA,635,SERRANA_635,True,1,,1
+81,Mamute Bar,"Rua Brás Cubas, 116 | Cruzeiro, Belo Horizonte - MG",-19.9443858,-43.9282398,,BRAS CUBAS,116,BRAS CUBAS_116,True,1,True,1
+82,Marina’s Bar,"Rua José Baroni, 13 | Santa Efigênia, Belo Horizonte - MG",-19.9237726,-43.9067129,,JOSE BARONI,13,JOSE BARONI_13,True,1,,1
+83,Mineiros Beer,"Rua Romualdo Lopes Cançado, 399 | Castelo, Belo Horizonte - MG",-19.8881972,-43.996875,,ROMUALDO LOPES CANCADO,399,ROMUALDO LOPES CANCADO_399,False,0,False,0
+84,Mulão,"Rua Marambaia, 291 | Caiçara, Belo Horizonte - MG",-19.9090992,-43.9683517,,MARAMBAIA,291,MARAMBAIA_291,False,0,False,0
+85,Nosso Spetim,"Rua dos Astecas, 3219 | Santa Mônica, Belo Horizonte - MG",-19.8299231,-43.9791637,,DOS ASTECAS,3219,DOS ASTECAS_3219,True,1,,1
+86,O Fino do Alho,"Rua Capitão Sérgio Pires, 41 | Minascaixa, Belo Horizonte - MG",-19.8066128,-43.9563356,,CAPITAO SERGIO PIRES,41,CAPITAO SERGIO PIRES_41,False,0,False,1
+87,Oratório Bar,"Avenida Brasil, 161 | Santa Efigênia, Belo Horizonte - MG",-19.925298,-43.9238081,,BRASIL,161,BRASIL_161,True,1,,1
+88,Parada 10.95 Bar,"Avenida dos Engenheiros, 1095 | Alípio de Melo, Belo Horizonte - MG",-19.8902904,-44.0007213,,DOS ENGENHEIROS,1095,DOS ENGENHEIROS_1095,True,1,,1
+89,Parada do Sabor,"Avenida General Carlos Guedes, 346 | Planalto, Belo Horizonte - MG",-19.8373712,-43.9480678,,GENERAL CARLOS GUEDES,346,GENERAL CARLOS GUEDES_346,False,0,False,1
+90,Pé de Cana,"Rua Flórida, 15 | Sion, Belo Horizonte - MG",-19.9489897,-43.9322579,,FLORIDA,15,FLORIDA_15,True,1,,1
+91,Pé de Goiaba,"Avenida Amazonas, 4676 | Nova Suíssa, Belo Horizonte - MG",-19.930377,-43.9812333,,AMAZONAS,4676,AMAZONAS_4676,True,1,,1
+92,Planeta Lúpulo,"Avenida Guarapari, 108 | Santa Amélia, Belo Horizonte - MG",-19.8388542,-43.977372,,GUARAPARI,108,GUARAPARI_108,True,1,True,1
+93,PoiZé Bar e Petisqueira,"Rua Pium-I, 686 | Cruzeiro, Belo Horizonte - MG",-19.9426434,-43.9299187,,PIUM-I,686,PIUM-I_686,True,1,True,1
+94,Prado Beer,"Avenida Francisco Sá, 590 | Prado, Belo Horizonte - MG",-19.924344,-43.9592689,,FRANCISCO SA,590,FRANCISCO SA_590,True,1,,1
+95,Prosa Boa,"Avenida Doutor Cristiano Guimarães, 1480 | Planalto, Belo Horizonte - MG",-19.8289924,-43.9519176,,DOUTOR CRISTIANO GUIMARAES,1480,DOUTOR CRISTIANO GUIMARAES_1480,True,1,,1
+96,Quinteiro Bar e Restaurante,"Rua Salinas, 1008 | Floresta, Belo Horizonte - MG",-19.9132533,-43.9278446,,SALINAS,1008,SALINAS_1008,True,1,,1
+97,Quioxque Botequim Carioca,"Rua Henrique Badaró Portugal, 157 | Buritis, Belo Horizonte - MG",-19.9744485,-43.9759493,,HENRIQUE BADARO PORTUGAL,157,HENRIQUE BADARO PORTUGAL_157,True,1,,1
+98,Quitandas da Tia Nice Bar,"Rua Alabastro, 146 | Sagrada Família, Belo Horizonte – MG",-19.9092753,-43.9205585,,ALABASTRO,146,ALABASTRO_146,True,1,,1
+99,Rancho do Manoel,"Rua Isabel Bueno, 1100 | Belo Horizonte - MG",Não encontrado,Não encontrado,,ISABEL BUENO,1100,ISABEL BUENO_1100,True,1,True,1
+100,Recanto Vovó Tela,"Rua Tenente Marino Freire, 270 | Maria Helena, Belo Horizonte - MG",-19.801897,-43.9936776,,TENENTE MARINO FREIRE,270,TENENTE MARINO FREIRE_270,True,1,,1
+101,Regis Bar,"Avenida Vinte e Oito de Setembro, 872 | Belo Horizonte - MG",Não encontrado,Não encontrado,,VINTE E OITO DE SETEMBRO,872,VINTE E OITO DE SETEMBRO_872,True,1,,1
+102,Rei do Peixe,"Rua Ramalho Ortigão, 735 | Santa Branca, Belo Horizonte - MG",-19.8307182,-43.9654983,,RAMALHO ORTIGAO,735,RAMALHO ORTIGAO_735,False,0,False,1
+103,Resenha da Naty,"Rua Gonçalves Ledo, 288 | Cachoeirinha, Belo Horizonte - MG",-19.8930163,-43.9460919,,GONCALVES LEDO,288,GONCALVES LEDO_288,True,1,,1
+104,Restaurante Jorge Americano,"Avenida Augusto de Lima, 744 | Centro, Belo Horizonte - MG",-19.9225815,-43.9430243,,AUGUSTO DE LIMA,744,AUGUSTO DE LIMA_744,True,1,,1
+105,S.O.S PUB,"Rua Padre José Maurício, 1126 | Vista Alegre, Belo Horizonte - MG",-19.9520894,-43.9926409,,PADRE JOSE MAURICIO,1126,PADRE JOSE MAURICIO_1126,False,0,False,0
+106,Santa Boemia,"Rua Mármore, 534 | Santa Tereza, Belo Horizonte - MG",-19.9162948,-43.9182816,,MARMORE,534,MARMORE_534,True,1,,1
+107,Santuário Retrô,"Avenida Padre Vieira, 150 | Minas Brasil, Belo Horizonte - MG",-19.9160217,-43.9899947,,PADRE VIEIRA,150,PADRE VIEIRA_150,True,1,,1
+108,Seu Braz,"Avenida Portugal, 4325 | Itapoã, Belo Horizonte - MG",-19.8428176,-43.9613545,,PORTUGAL,4325,PORTUGAL_4325,True,1,,1
+109,Silvio’s Bar,"Rua Begônia, 199 | Esplanada, Belo Horizonte - MG",-19.9024451,-43.9055043,,BEGONIA,199,BEGONIA_199,True,1,,1
+110,Sinhá Erozitha Bistrôteco,"Rua Santo Amaro, 257 | Sagrada Família, Belo Horizonte - MG",-19.9011834,-43.9166512,,SANTO AMARO,257,SANTO AMARO_257,True,1,,1
+111,Sô Bar,"Avenida Altamiro Avelino Soares, 426 | Castelo, Belo Horizonte - MG",-19.8801555,-44.0024485,,ALTAMIRO AVELINO SOARES,426,ALTAMIRO AVELINO SOARES_426,True,1,,1
+112,Spetim,"Rua Ilacir Pereira Lima, 518 | Silveira, Belo Horizonte - MG",-19.8918598,-43.929371,,ILACIR PEREIRA LIMA,518,ILACIR PEREIRA LIMA_518,True,1,,1
+113,Tanganica Art Bar,"Rua Padre Demerval Gomes, 380 | Coração Eucarístico, Belo Horizonte - MG",-19.9267672,-43.9901954,,PADRE DEMERVAL GOMES,380,PADRE DEMERVAL GOMES_380,True,1,,1
+114,The Butcher,"Avenida Ressaca, 353 | Coração Eucarístico, Belo Horizonte - MG",-19.921143,-43.9860821,,RESSACA,353,RESSACA_353,False,0,False,0
+115,Toca do Ogro,"Rua Professor Nelson de Sena, 4 | Pampulha, Belo Horizonte - MG",-19.8543191,-43.9568613,,PROFESSOR NELSON DE SENA,4,PROFESSOR NELSON DE SENA_4,True,1,,1
+116,Toninho – Alto Forno,"Rua Miracema, 100 | Santo André, Belo Horizonte - MG",-19.8999841,-43.9522977,,MIRACEMA,100,MIRACEMA_100,True,1,,1
+117,Tropeiro do Lisboa,"Avenida Leontino Francisco Alves, 506 | Serra Verde (Venda Nova), Belo Horizonte - MG",-19.8002642,-43.9587072,,LEONTINO FRANCISCO ALVES,506,LEONTINO FRANCISCO ALVES_506,False,0,False,0
+118,Us Motoca,"Rua Blenda, 91 | Camargos, Belo Horizonte - MG",-19.9407705,-44.0148074,,BLENDA,91,BLENDA_91,True,1,,1
+119,Xambar,"Avenida Augusto de Lima, 233 | Centro, Belo Horizonte - MG",-19.9247161,-43.9375956,,AUGUSTO DE LIMA,233,AUGUSTO DE LIMA_233,True,1,,1
+120,Xico da Kafua,"Avenida Itaú, 1195 - João Pinheiro, Belo Horizonte - MG",-19.9230363,-44.0034156,,ITAU,1195,ITAU_1195,False,0,False,1
+121,Xico do Churrasco,"Av Altamiro Avelino Soares, 920 - Castelo - Belo Horizonte - MG",-19.8801555,-44.0024485,,ALTAMIRO AVELINO SOARES,920,ALTAMIRO AVELINO SOARES_920,True,1,,1
+122,Zé Bolacha,"Rua das Melancias, 35 | Vila Cloris, Belo Horizonte - MG",-19.8211973,-43.9515485,,DAS MELANCIAS,35,DAS MELANCIAS_35,True,1,,1
+123,Zoo Bar,"Avenida Otacílio Negrão de Lima, 7844 | Pampulha, Belo Horizonte - MG",-19.854589,-44.0040585,,OTACILIO NEGRAO DE LIMA,7844,OTACILIO NEGRAO DE LIMA_7844,True,1,,1
