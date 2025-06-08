@@ -13,9 +13,11 @@ import json
 # 1) CARREGA DADOS DE BARES E FAZ CONVERSÃO UTM → LAT/LON
 # ---------------------------------------------------------
 script_dir = os.path.dirname(os.path.abspath(__file__))
-data_path = os.path.join(script_dir, '20250401_bares_e_restaurantes.csv')
+data_path = os.path.join(script_dir, 'df_com_buteco.csv')
 
-df = pd.read_csv(data_path, encoding='utf-8', low_memory=False, sep=';')
+df = pd.read_csv(data_path, encoding='utf-8', low_memory=False, sep=',')
+df['Comida de Boteco'] = pd.to_numeric(df['Comida de Boteco'], errors='coerce').fillna(0).astype(int)
+
 
 transformer = Transformer.from_crs("EPSG:31983", "EPSG:4326", always_xy=True)
 def utm_to_latlon(geometry):
@@ -40,7 +42,7 @@ df['DATA_INICIO_ATIVIDADE'] = pd.to_datetime(df['DATA_INICIO_ATIVIDADE'], format
 df['DATA_INICIO_STR'] = df['DATA_INICIO_ATIVIDADE'].dt.strftime('%Y-%m-%d')
 
 df = df[['NOME_FANTASIA', 'latitude', 'longitude', 'FULL_ADDRESS',
-         'DATA_INICIO_ATIVIDADE', 'IND_POSSUI_ALVARA', 'DATA_INICIO_STR']]
+         'DATA_INICIO_ATIVIDADE', 'IND_POSSUI_ALVARA', 'DATA_INICIO_STR', 'Comida de Boteco']]
 
 # ---------------------------------------------------------
 # 2) MONTA K-D TREE PARA BUSCAR PONTOS NO RETÂNGULO VISÍVEL
@@ -133,12 +135,19 @@ for feat in bairros_raw["features"]:
 # ---------------------------------------------------------
 # 4) CONFIGURA APP DASH + LAYERS
 # ---------------------------------------------------------
-app = dash.Dash(__name__, external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'])
-
+app = dash.Dash(
+    __name__,
+    external_stylesheets=[
+        'https://codepen.io/chriddyp/pen/bWLwgP.css'
+    ],
+    external_scripts=[
+        'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js'
+    ]
+)
 # Necessário para hover/click em markers no dash_leaflet
-app.scripts.append_script({
-    'external_url': 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js'
-})
+# app.scripts.append_script({
+#     'external_url': 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js'
+# })
 
 app.layout = html.Div([
     dcc.Store(id='initial-bounds', data=[[-20, -44], [-19, -43]]),
@@ -243,7 +252,29 @@ app.layout = html.Div([
                     }
                 )
             ], style={'marginBottom': '5px', 'display': 'flex', 'flexDirection': 'row'}),
-
+            
+            html.Div([
+                html.Label('Comida de Boteco:', style={
+                    'marginBottom': '0px',
+                    'padding': '5px',
+                    'width': '120px',
+                    'font-weight': 'bold'
+                }),
+                dcc.Checklist(
+                    id='comida-boteco-filter',
+                        options=[
+                            {'label': 'Sim', 'value': 1},
+                        ],
+                    value=[],  # inicialmente, mostrar tanto 1 quanto 0
+                    labelStyle={'display': 'inline-block', 'marginRight': '10px'},
+                    style={
+                        'display': 'flex',
+                        'alignItems': 'center',
+                        'marginLeft': '-5px'
+                    }
+                )
+            ], style={'marginBottom': '5px', 'display': 'flex', 'flexDirection': 'row'}),
+            
             # ─── NOVO: Toggle Bairros ───────────────────────────
             html.Div([
                 html.Label('Bairros:', style={'marginBottom': '0px', 'padding': '5px', 'width': '90px', 'font-weight': 'bold'}),
@@ -326,10 +357,14 @@ app.layout = html.Div([
     Output('markers', 'children'),
     [Input('map', 'bounds'),
      Input('initial-bounds', 'data'),
-     Input('table', 'selected_rows')],
-    [State('table', 'data')]
+     Input('table', 'selected_rows'),
+     Input('comida-boteco-filter', 'value')
+     ],
+    
+    [State('table', 'data')],
+
 )
-def update_markers(bounds, initial_bounds, selected_rows, table_data):
+def update_markers(bounds, initial_bounds, selected_rows, comida_boteco_filter, table_data):
     bounds = bounds or initial_bounds
     if not bounds:
         return []
@@ -340,7 +375,8 @@ def update_markers(bounds, initial_bounds, selected_rows, table_data):
     result = []
     range_search(kd_tree, rect, result)
     filtered_df = df.loc[result]
-    
+    if comida_boteco_filter == [1]:
+        filtered_df = filtered_df[filtered_df['Comida de Boteco'] == 1]
     # Se houver mais de 200 pontos e nenhum selecionado, amostra aleatoriamente 200
     if not selected_rows or not table_data:
         if len(filtered_df) > 200:
@@ -353,8 +389,12 @@ def update_markers(bounds, initial_bounds, selected_rows, table_data):
     markers = []
     for _, row in filtered_df.iterrows():
         is_selected = (row['NOME_FANTASIA'] == selected_name)
+        if row['Comida de Boteco'] == 1:
+         icon_url = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png'
+        else:
+         icon_url = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png'
         icon = {
-            'iconUrl': 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+            'iconUrl': icon_url,
             'iconSize': [25, 41],
             'iconAnchor': [12, 41],
             'popupAnchor': [1, -34],
@@ -425,12 +465,13 @@ def sync_geojson(geojson):
         Input('alvara-filter', 'value'),
         Input('name-filter', 'value'),
         Input('address-filter', 'value'),
+        Input('comida-boteco-filter', 'value'),
         Input({'type': 'marker', 'index': dash.dependencies.ALL}, 'n_clicks')
     ],
     [State('table', 'data')]
 )
 def update_table_and_selection(map_bounds, initial_bounds, geojson,
-                               reset_clicks, alvara_filter, name_filter, address_filter, 
+                               reset_clicks, alvara_filter, name_filter, address_filter, comida_boteco_filter,
                                marker_clicks, table_data):
     ctx = dash.callback_context
     triggered_id = ctx.triggered[0]["prop_id"] if ctx.triggered else ""
@@ -472,6 +513,12 @@ def update_table_and_selection(map_bounds, initial_bounds, geojson,
         filtered_df = filtered_df[filtered_df['NOME_FANTASIA'].str.contains(name_filter, case=False, na=False)]
     if address_filter:
         filtered_df = filtered_df[filtered_df['FULL_ADDRESS'].str.contains(address_filter, case=False, na=False)]
+    # Filtra só se o filtro estiver marcado
+    if comida_boteco_filter == [1]:
+        filtered_df = filtered_df[filtered_df['Comida de Boteco'] == 1]
+    # Se estiver vazio (desmarcado), não filtra nada
+
+
 
     # Filtragem espacial por retângulo desenhado ou por limites do mapa
     has_rectangle = geojson and geojson.get("features") and any(
