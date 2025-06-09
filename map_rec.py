@@ -137,7 +137,7 @@ for feat in bairros_raw["features"]:
 # 4) CONFIGURA APP DASH + LAYERS
 # ---------------------------------------------------------
 app = dash.Dash(__name__, external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'])
-app.title = 'BH - Bares e Restaurantes'
+app.title = 'BH - Bares e Hestaurantes'
 
 # Necessário para hover/click em markers no dash_leaflet
 app.scripts.append_script({
@@ -473,7 +473,7 @@ def update_markers(bounds, initial_bounds, selected_rows, geojson,
         filtered_df = filtered_df[filtered_df['FULL_ADDRESS'].str.contains(address_filter, case=False, na=False)]
 
     # Limita total de marcadores no mapa
-    MAX_TOTAL_MARKERS = 300
+    MAX_TOTAL_MARKERS = 200
 
     # Separação dos participantes e outros
     df_boteco = filtered_df[filtered_df['Comida de Boteco'] == 1]
@@ -830,4 +830,4 @@ def update_table_and_selection(map_bounds, initial_bounds, geojson,
 # EXECUTA O SERVIDOR
 # ───────────────────────────────────────────────────────────
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 8050)))
+    app.run(debug=True, port=8050)
