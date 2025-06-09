@@ -1,9 +1,10 @@
 import pandas as pd
 import numpy as np
 import dash
-from dash import html, dash_table, dcc
+from dash import html, dash_table, dcc, callback_context 
 import dash_leaflet as dl
 from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
 import re
 import os
 from pyproj import Transformer
@@ -114,12 +115,10 @@ def reproject_geometry(geometry):
         for polygon in geometry['coordinates']:
             new_polygon = []
             for ring in polygon:
-                # cada ring é lista de pontos [[x,y], [x,y], ...]
                 new_ring = [reproject_coords_to_lonlat(pt) for pt in ring]
                 new_polygon.append(new_ring)
             new_coords.append(new_polygon)
         return {'type': 'MultiPolygon', 'coordinates': new_coords}
-    # se por acaso houver outro tipo (não esperado), devolve original
     return geometry
 
 # Monta o GeoJSON reprojetado para WGS84
@@ -144,10 +143,6 @@ app = dash.Dash(
         'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js'
     ]
 )
-# Necessário para hover/click em markers no dash_leaflet
-# app.scripts.append_script({
-#     'external_url': 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js'
-# })
 
 app.layout = html.Div([
     dcc.Store(id='initial-bounds', data=[[-20, -44], [-19, -43]]),
@@ -159,7 +154,7 @@ app.layout = html.Div([
     # ───────────────────────────────────────────────────────────
     html.Div([
         dl.Map(
-            id='map',
+            id='map', 
             style={'width': '100%', 'height': '100%'},
             center=[-19.8800, -43.9378],
             zoom=12,
@@ -174,7 +169,10 @@ app.layout = html.Div([
                         id="edit_control",
                         draw={"rectangle": True, "polygon": False, "marker": False,
                               "circle": False, "polyline": False, "circlemarker": False},
-                        edit={"edit": False}
+                        edit={"edit": False,
+                              "remove": False
+                              },
+                        
                     ),
                     dl.LayerGroup(id="markers")
                 ])
@@ -253,6 +251,7 @@ app.layout = html.Div([
                 )
             ], style={'marginBottom': '5px', 'display': 'flex', 'flexDirection': 'row'}),
             
+            # Filtro Comida de Boteco
             html.Div([
                 html.Label('Comida de Boteco:', style={
                     'marginBottom': '0px',
@@ -265,7 +264,7 @@ app.layout = html.Div([
                         options=[
                             {'label': 'Sim', 'value': 1},
                         ],
-                    value=[],  # inicialmente, mostrar tanto 1 quanto 0
+                    value=[], 
                     labelStyle={'display': 'inline-block', 'marginRight': '10px'},
                     style={
                         'display': 'flex',
@@ -355,22 +354,45 @@ app.layout = html.Div([
 # ───────────────────────────────────────────────────────────
 @app.callback(
     Output('markers', 'children'),
-    [Input('map', 'bounds'),
-     Input('initial-bounds', 'data'),
-     Input('table', 'selected_rows'),
-     Input('comida-boteco-filter', 'value')
-     ],
-    
-    [State('table', 'data')],
-
+    [
+        Input('map', 'bounds'),
+        Input('initial-bounds', 'data'),
+        Input('table', 'selected_rows'),
+        Input('comida-boteco-filter', 'value'),
+        Input('edit_control', 'geojson'),
+        Input('map', 'clickData'),         
+    ],
+    State('table', 'data'),
 )
-def update_markers(bounds, initial_bounds, selected_rows, comida_boteco_filter, table_data):
-    bounds = bounds or initial_bounds
-    if not bounds:
-        return []
-    lat_min, lon_min = bounds[0]
-    lat_max, lon_max = bounds[1]
-    rect = [lat_min, lon_min, lat_max, lon_max]
+def update_markers(bounds,
+                   initial_bounds,
+                   selected_rows,
+                   comida_boteco_filter,
+                   geojson,                 
+                   click_data,              
+                   table_data):
+    has_rectangle = geojson and geojson.get("features") and any(
+        f.get("geometry") and f["geometry"].get("coordinates")
+        for f in geojson["features"]
+    )
+
+    if has_rectangle:
+        feature = next(
+            f for f in reversed(geojson["features"])
+            if f.get("geometry") and f["geometry"].get("coordinates")
+)
+        # o EditControl devolve Polygon com coords[0] = lista de pontos
+        coords = feature["geometry"]["coordinates"][0]
+        lons = [p[0] for p in coords]
+        lats = [p[1] for p in coords]
+        rect = [min(lats), min(lons), max(lats), max(lons)]
+    else:
+        bounds = bounds or initial_bounds
+        if not bounds:
+            return []
+        lat_min, lon_min = bounds[0]
+        lat_max, lon_max = bounds[1]
+        rect = [lat_min, lon_min, lat_max, lon_max]
     
     result = []
     range_search(kd_tree, rect, result)
@@ -427,7 +449,6 @@ def update_markers(bounds, initial_bounds, selected_rows, comida_boteco_filter, 
 )
 def toggle_bairros_layer(selected):
     if 'SHOW' in selected:
-        # Se marcado, retorna um dl.GeoJSON com estilo bem evidente
         return [
             dl.GeoJSON(
                 data=bairros_geojson,
@@ -456,101 +477,120 @@ def sync_geojson(geojson):
 # CALLBACK: Atualiza tabela conforme filtros e seleção
 # ───────────────────────────────────────────────────────────
 @app.callback(
-    [Output('table', 'data'), Output('table', 'selected_rows')],
+    [Output('table', 'data'),
+     Output('table', 'selected_rows')],
     [
         Input('map', 'bounds'),
         Input('initial-bounds', 'data'),
-        Input('edit_control', 'geojson'), 
+        Input('edit_control', 'geojson'),
+        Input('map', 'clickData'),               
         Input('reset-btn', 'n_clicks'),
         Input('alvara-filter', 'value'),
         Input('name-filter', 'value'),
         Input('address-filter', 'value'),
         Input('comida-boteco-filter', 'value'),
-        Input({'type': 'marker', 'index': dash.dependencies.ALL}, 'n_clicks')
+        Input({'type': 'marker', 'index': dash.ALL}, 'n_clicks')
     ],
-    [State('table', 'data')]
+    State('table', 'data'),
 )
-def update_table_and_selection(map_bounds, initial_bounds, geojson,
-                               reset_clicks, alvara_filter, name_filter, address_filter, comida_boteco_filter,
-                               marker_clicks, table_data):
-    ctx = dash.callback_context
-    triggered_id = ctx.triggered[0]["prop_id"] if ctx.triggered else ""
+def update_table_and_selection(bounds, initial_bounds, geojson, _click_data,
+                               reset_clicks, alvara_filter, name_filter,
+                               address_filter, boteco_filter,
+                               _marker_clicks, table_rows):
 
-    # Situação de inicialização
-    if not ctx.triggered or 'startup-trigger' in triggered_id:
-        bounds = map_bounds or initial_bounds
-        if bounds:
-            lat_min, lon_min = bounds[0]
-            lat_max, lon_max = bounds[1]
-            rect = [lat_min, lon_min, lat_max, lon_max]
-            result = []
-            range_search(kd_tree, rect, result)
-            return df.loc[result].to_dict('records'), []
-        else:
-            return df.to_dict('records'), []
+    ctx  = dash.callback_context
+    trig = ctx.triggered_id
 
-    # Botão Reset
-    if 'reset-btn' in triggered_id:
-        return df.to_dict('records'), []
-
-    # Clique em marcador → seleciona linha correspondente
-    if isinstance(ctx.triggered[0]["value"], dict) and ctx.triggered[0]["value"] is not None:
-        marker_name = ctx.triggered[0]["value"].get("index")
-        if table_data:
-            for idx, row in enumerate(table_data):
-                if row['NOME_FANTASIA'] == marker_name:
-                    return dash.no_update, [idx]
+    # ───── 1) Clique em marcador → só seleciona  ──────────────────────
+    if isinstance(trig, dict) and trig.get('type') == 'marker':
+        nome = trig['index']
+        if table_rows:
+            sel = [i for i, r in enumerate(table_rows)
+                   if r['NOME_FANTASIA'] == nome]
+            return dash.no_update, sel
         return dash.no_update, []
 
-    # Agora aplicamos filtros (Alvará, nome, endereço)
-    filtered_df = df.copy()
-    name_filter = name_filter if isinstance(name_filter, str) else ''
-    address_filter = address_filter if isinstance(address_filter, str) else ''
+    # ───── 2) Reset ou 1ª execução  →  usa apenas os bounds  ──────────
+    if trig in (None, 'reset-btn'):
+        bounds = bounds or initial_bounds
+        lat_min, lon_min = bounds[0]
+        lat_max, lon_max = bounds[1]
+        rect = [lat_min, lon_min, lat_max, lon_max]
 
-    if alvara_filter:
-        filtered_df = filtered_df[filtered_df['IND_POSSUI_ALVARA'].str.upper().isin(alvara_filter)]
-    if name_filter:
-        filtered_df = filtered_df[filtered_df['NOME_FANTASIA'].str.contains(name_filter, case=False, na=False)]
-    if address_filter:
-        filtered_df = filtered_df[filtered_df['FULL_ADDRESS'].str.contains(address_filter, case=False, na=False)]
-    # Filtra só se o filtro estiver marcado
-    if comida_boteco_filter == [1]:
-        filtered_df = filtered_df[filtered_df['Comida de Boteco'] == 1]
-    # Se estiver vazio (desmarcado), não filtra nada
-
-
-
-    # Filtragem espacial por retângulo desenhado ou por limites do mapa
-    has_rectangle = geojson and geojson.get("features") and any(
-        f.get("geometry") and f["geometry"].get("coordinates") for f in geojson["features"]
-    )
-
-    if has_rectangle:
-        feature = next((f for f in geojson["features"]
-                        if f.get("geometry") and f["geometry"].get("coordinates")), None)
-        if feature:
-            coords = feature["geometry"]["coordinates"][0]
-            lons = [p[0] for p in coords]
-            lats = [p[1] for p in coords]
-            lat_min, lat_max = min(lats), max(lats)
-            lon_min, lon_max = min(lons), max(lons)
-            rect = [lat_min, lon_min, lat_max, lon_max]
-            result = []
-            range_search(kd_tree, rect, result)
-            valid_indices = filtered_df.index.intersection(result)
-            filtered_df = filtered_df.loc[valid_indices]
+    # ───── 3) Filtros normais + eventual retângulo  ──────────────────
     else:
-        bounds = map_bounds or initial_bounds
-        if bounds:
+        # a) texto / checkboxes
+        filtered = df.copy()
+        if alvara_filter:
+            filtered = filtered[filtered['IND_POSSUI_ALVARA']
+                                .str.upper().isin(alvara_filter)]
+        if isinstance(name_filter, str) and name_filter:
+            filtered = filtered[filtered['NOME_FANTASIA']
+                                .str.contains(name_filter, case=False, na=False)]
+        if isinstance(address_filter, str) and address_filter:
+            filtered = filtered[filtered['FULL_ADDRESS']
+                                .str.contains(address_filter, case=False, na=False)]
+        if boteco_filter == [1]:
+            filtered = filtered[filtered['Comida de Boteco'] == 1]
+
+        # b) retângulo desenhado ou, se não houver, bounds do mapa
+        if geojson and geojson.get('features'):
+            feat = next((f for f in reversed(geojson['features'])
+                         if f.get('geometry') and f['geometry'].get('coordinates')), None)
+            if feat:
+                coords = feat['geometry']['coordinates'][0]
+                lats   = [p[1] for p in coords]
+                lons   = [p[0] for p in coords]
+                rect   = [min(lats), min(lons), max(lats), max(lons)]
+            else:
+                bounds = bounds or initial_bounds
+                lat_min, lon_min = bounds[0]
+                lat_max, lon_max = bounds[1]
+                rect = [lat_min, lon_min, lat_max, lon_max]
+        else:
+            bounds = bounds or initial_bounds
             lat_min, lon_min = bounds[0]
             lat_max, lon_max = bounds[1]
             rect = [lat_min, lon_min, lat_max, lon_max]
-            result = []
-            range_search(kd_tree, rect, result)
-            valid_indices = filtered_df.index.intersection(result)
-            filtered_df = filtered_df.loc[valid_indices]
 
-    return filtered_df.to_dict('records'), []
+        # c) aplica corte espacial
+        ids = []; range_search(kd_tree, rect, ids)
+        filtered = filtered.loc[filtered.index.intersection(ids)]
+
+        return filtered.to_dict('records'), []
+
+    # (chega aqui só no caso “reset” ou primeira execução)
+    ids = []; range_search(kd_tree, rect, ids)
+    rows = df.loc[ids].to_dict('records')
+    return rows, []
+
+
+
+# ── mantém UM retângulo por vez ───────────────────────────
+@app.callback(
+    Output("edit_control", "geojson", allow_duplicate=True),
+    [
+        Input("edit_control", "geojson"), 
+        Input("map", "clickData")          
+    ],
+    prevent_initial_call=True
+)
+def manage_rectangle(geojson, clickData):
+    trig = callback_context.triggered_id
+
+    # 1) Desenho novo ou edição → podar tudo menos o último
+    if isinstance(trig, dict) and trig.get("prop_id", "").startswith("edit_control"):
+        feats = geojson.get("features", [])
+        if len(feats) > 1:
+            return {"type": "FeatureCollection", "features": [feats[-1]]}
+        raise PreventUpdate
+
+    # 2) Clique no mapa → limpar completamente
+    if isinstance(trig, dict) and trig.get("prop_id", "").startswith("map"):
+        if geojson and geojson.get("features"):
+            return {"type": "FeatureCollection", "features": []}
+    raise PreventUpdate
+
 
 
 # ───────────────────────────────────────────────────────────
