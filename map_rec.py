@@ -425,30 +425,40 @@ def update_markers(bounds, initial_bounds, selected_rows, geojson,
     ctx = callback_context
     triggered_prop = ctx.triggered[0]['prop_id'] if ctx.triggered else ''
 
-    has_rectangle = geojson and geojson.get("features") and any(
-        f.get("geometry") and f["geometry"].get("coordinates") for f in geojson["features"]
-    )
+    result = set()
 
-    if has_rectangle:
-        feature = next((f for f in geojson["features"]
-                        if f.get("geometry") and f["geometry"].get("coordinates")), None)
-        coords = feature["geometry"]["coordinates"][0]
-        lons = [p[0] for p in coords]
-        lats = [p[1] for p in coords]
-        lat_min, lat_max = min(lats), max(lats)
-        lon_min, lon_max = min(lons), max(lons)
-    else:
+    # Verifica se há retângulos desenhados
+    has_valid_rectangle = False
+    if geojson and geojson.get("features"):
+        for feature in geojson["features"]:
+            geometry = feature.get("geometry")
+            if geometry and geometry.get("type") == "Polygon":
+                coords = geometry["coordinates"][0]
+                if coords:
+                    has_valid_rectangle = True
+                    lons = [p[0] for p in coords]
+                    lats = [p[1] for p in coords]
+                    lat_min, lat_max = min(lats), max(lats)
+                    lon_min, lon_max = min(lons), max(lons)
+                    rect = [lon_min, lat_min, lon_max, lat_max]
+                    partial_result = []
+                    range_search(kd_tree, rect, partial_result)
+                    result.update(partial_result)
+
+    # Se não houver retângulos válidos, usa os bounds do mapa como fallback
+    if not has_valid_rectangle:
         bounds = bounds or initial_bounds
         if not bounds:
             return current_markers or []
         lat_min, lon_min = bounds[0]
         lat_max, lon_max = bounds[1]
-    
-    rect = [lon_min, lat_min, lon_max, lat_max]
-    result = []
-    range_search(kd_tree, rect, result)
-    
-    filtered_df = df.loc[result]
+        rect = [lon_min, lat_min, lon_max, lat_max]
+        partial_result = []
+        range_search(kd_tree, rect, partial_result)
+        result.update(partial_result)
+
+    # Converte para lista de índices
+    filtered_df = df.loc[list(result)]
 
     name_filter = name_filter if isinstance(name_filter, str) else ''
     address_filter = address_filter if isinstance(address_filter, str) else ''
@@ -779,34 +789,39 @@ def update_table_and_selection(map_bounds, initial_bounds, geojson,
         filtered_df = filtered_df[filtered_df['FULL_ADDRESS'].str.contains(address_filter, case=False, na=False)]
 
     # Filtragem espacial por retângulo desenhado ou por limites do mapa
-    has_rectangle = geojson and geojson.get("features") and any(
-        f.get("geometry") and f["geometry"].get("coordinates") for f in geojson["features"]
-    )
+    result = set()
+    has_valid_rectangle = False
 
-    if has_rectangle:
-        feature = next((f for f in geojson["features"]
-                        if f.get("geometry") and f["geometry"].get("coordinates")), None)
-        if feature:
-            coords = feature["geometry"]["coordinates"][0]
-            lons = [p[0] for p in coords]
-            lats = [p[1] for p in coords]
-            lat_min, lat_max = min(lats), max(lats)
-            lon_min, lon_max = min(lons), max(lons)
-            rect = [lon_min, lat_min, lon_max, lat_max]
-            result = []
-            range_search(kd_tree, rect, result)
-            valid_indices = filtered_df.index.intersection(result)
-            filtered_df = filtered_df.loc[valid_indices]
-    else:
+    if geojson and geojson.get("features"):
+        for feature in geojson["features"]:
+            geometry = feature.get("geometry")
+            if geometry and geometry.get("type") == "Polygon":
+                coords = geometry["coordinates"][0]
+                if not coords:
+                    continue
+                has_valid_rectangle = True
+                lons = [p[0] for p in coords]
+                lats = [p[1] for p in coords]
+                lat_min, lat_max = min(lats), max(lats)
+                lon_min, lon_max = min(lons), max(lons)
+                rect = [lon_min, lat_min, lon_max, lat_max]
+                partial_result = []
+                range_search(kd_tree, rect, partial_result)
+                result.update(partial_result)
+
+    if not has_valid_rectangle:
         bounds = map_bounds or initial_bounds
         if bounds:
             lat_min, lon_min = bounds[0]
             lat_max, lon_max = bounds[1]
             rect = [lon_min, lat_min, lon_max, lat_max]
-            result = []
-            range_search(kd_tree, rect, result)
-            valid_indices = filtered_df.index.intersection(result)
-            filtered_df = filtered_df.loc[valid_indices]
+            partial_result = []
+            range_search(kd_tree, rect, partial_result)
+            result.update(partial_result)
+
+    # Aplica interseção com o dataframe já filtrado por nome, endereço, alvará, etc.
+    valid_indices = filtered_df.index.intersection(list(result))
+    filtered_df = filtered_df.loc[valid_indices]
 
     return filtered_df.to_dict('records'), []
 
@@ -815,4 +830,4 @@ def update_table_and_selection(map_bounds, initial_bounds, geojson,
 # EXECUTA O SERVIDOR
 # ───────────────────────────────────────────────────────────
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 8050)))
+    app.run(debug=True, port=8050)
