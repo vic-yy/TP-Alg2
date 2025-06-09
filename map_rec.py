@@ -137,7 +137,7 @@ for feat in bairros_raw["features"]:
 # 4) CONFIGURA APP DASH + LAYERS
 # ---------------------------------------------------------
 app = dash.Dash(__name__, external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'])
-app.title = 'BH - Bares e Hestaurantes'
+app.title = 'BH - Bares e Restaurantes'
 
 # Necessário para hover/click em markers no dash_leaflet
 app.scripts.append_script({
